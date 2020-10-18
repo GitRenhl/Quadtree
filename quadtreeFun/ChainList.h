@@ -9,12 +9,10 @@ public:
     Link(Link<T> *previous, T &&data):
         previous(previous),
         m_data(data) {
-        puts("Init link");
     }
     ~Link() {
         previous = nullptr;
         next = nullptr;
-        puts("Del link");
     }
     const T &GetData() const { return m_data; }
     Link<T> *previous;
@@ -54,6 +52,7 @@ const Link<T> *Chain<T>::New(T &&data) {
         return m_first;
     case 1:
         m_first->next = new_link;
+        new_link->previous = m_first;
         m_last = new_link;
         break;
     default:

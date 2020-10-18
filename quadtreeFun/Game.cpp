@@ -67,7 +67,7 @@ void Game::EventProcess(float dt) {
         draw_quads = !draw_quads;
     }
 
-    if (GetMouse(Mouse::Left).bPressed) {
+    if (GetMouse(Mouse::Right).bHeld || GetMouse(Mouse::Left).bPressed) {
         auto *link = pointsList.New({ GetMouseX(), GetMouseY() });
         if (!quadtree.Insert(&link->GetData())) {
             puts("error while adding point");
