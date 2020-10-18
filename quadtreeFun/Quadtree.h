@@ -52,4 +52,3 @@ private:
     bool m_is_splited;
     const Vector2i *m_point;
 };
-

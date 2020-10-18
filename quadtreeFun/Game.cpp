@@ -3,12 +3,12 @@
 #include "Vector2d.h"
 #include <assert.h>
 
+
 enum Mouse: uint32_t {
     Left = 0,
     Right,
     Middle
 };
-
 
 Game::Game():
      Engine(),
@@ -19,8 +19,6 @@ Game::Game():
 }
 
 Game::~Game() {
-    selected = nullptr;
-    delete pointsList;
 }
 
 bool Game::OnUserCreate() {
@@ -56,8 +54,8 @@ void Game::DrawQuad(const Quadtree *quad) {
 
 void Game::RebuildQueue() {
     quadtree.Clear();
-    for (auto *pl = pointsList; pl != nullptr; pl = pl->next) {
-        quadtree.Insert(pl);
+    for (auto *pl = pointsList.GetFirst(); pl != nullptr; pl = pl->next) {
+        quadtree.Insert(&pl->GetData());
     }
 }
 
@@ -70,23 +68,19 @@ void Game::EventProcess(float dt) {
     }
 
     if (GetMouse(Mouse::Left).bPressed) {
-        const Vector2i *pos;
-        if (pointsList == nullptr) {
-            pointsList = new PointList(nullptr, GetMouseX(), GetMouseY());
-            pos = pointsList;
-        } else {
-            pos = pointsList->New(GetMouseX(), GetMouseY());
-        }
-        if (!quadtree.Insert(pos)) {
+        auto *link = pointsList.New({ GetMouseX(), GetMouseY() });
+        if (!quadtree.Insert(&link->GetData())) {
             puts("error while adding point");
-            assert(pointsList->Pop());
-            RebuildQueue();
+            auto *link = pointsList.Pop();
+            if (link != nullptr) {
+                delete link;
+                RebuildQueue();
+            }
         }
     }
-
-    if (GetKey(olc::S).bPressed) {
-        const Vector2i *const point = quadtree.GetPoint({ GetMouseX(), GetMouseY() });
-        selected = point;
+    if (GetKey(olc::R).bPressed) {
+        pointsList.Clear();
+        quadtree.Clear();
     }
 }
 
@@ -96,19 +90,17 @@ void Game::Update(float dt) {
 
 void Game::Render() {
     Clear(olc::BLACK);
+
     DrawQuad(&quadtree);
 
-    if (selected != nullptr) {
-        DrawCircle(selected->x, selected->y, 5);
-    }
-
-    if (pointsList != nullptr) {
-        DrawStringDecal({ 2.f, 2.f }, std::to_string(pointsList->GetFirst()->Size()));
-    }
-
+    // Draw rectangle around a mouse
     DrawRect(GetMouseX() - range.x / 2, GetMouseY() - range.y / 2, range.x, range.y);
     for (auto *point : points_in_range) {
         Draw(point->x, point->y, olc::RED);
     }
+
+    // Draw how many points exists
+    DrawStringDecal({ 2.f, 2.f }, std::to_string(pointsList.Size()));
+    // Draw how many points are in range
     DrawStringDecal({ 2.f, 12.f }, std::to_string(points_in_range.size()));
 }
